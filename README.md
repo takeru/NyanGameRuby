@@ -20,3 +20,7 @@ ios-ruby-embedded% NyanGameRuby% rake
 ios-ruby-embedded% cd ..
 NyanGameRuby% open proj.ios/NyanGameRuby.xcodeproj
 ```
+
+Blog
+----
+http://d.hatena.ne.jp/urekat/20140215/1392461897
