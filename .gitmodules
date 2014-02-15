@@ -1,0 +1,6 @@
+[submodule "ios-ruby-embedded"]
+	path = ios-ruby-embedded
+	url = https://github.com/carsonmcdonald/ios-ruby-embedded.git
+[submodule "cocos2dx-mruby"]
+	path = cocos2dx-mruby
+	url = git@github.com:takeru/cocos2dx-mruby.git
