@@ -42,16 +42,16 @@ class NyanGame
       @layer = CCLayer.create
 
       @touchBeginPoint = nil
-      @layer.registerScriptTouchHandler do |eventType, x, y|
+      @layer.registerScriptTouchHandler do |eventType, touch|
         case eventType
         when CCTOUCHBEGAN
-          onTouchBegan(x, y)
+          onTouchBegan(touch)
         when CCTOUCHMOVED
-          onTouchMoved(x, y)
+          onTouchMoved(touch)
         when CCTOUCHENDED
-          onTouchEnded(x, y)
+          onTouchEnded(touch)
         when CCTOUCHCANCELLED
-          onTouchCanceled(x, y)
+          onTouchCanceled(touch)
         else
           raise "unknown eventType=#{eventType}"
         end
@@ -106,42 +106,47 @@ class NyanGame
     end
   end
 
-  def onTouchBegan(x, y)
-    puts("onTouchBegan: #{x},#{y}")
-    @touchBeginPoint = {:x=>x, :y=>y}
+  def onTouchBegan(touch)
+    glPt = CCDirector.sharedDirector.convertToGL(touch.getLocationInView)
+
+    point = @bg.convertTouchToNodeSpace(touch)
+    puts("onTouchBegan: #{point.x},#{point.y} GL=(#{glPt.x},#{glPt.y})")
+    @touchBeginPoint = {:x=>point.x, :y=>point.y}
 
     return !@animating
   end
 
-  def onTouchMoved(x, y)
-    puts("onTouchMoved: #{x},#{y}")
+  def onTouchMoved(touch)
+    point = @bg.convertTouchToNodeSpace(touch)
+    puts("onTouchMoved: #{point.x},#{point.y}")
     if @touchBeginPoint
       sp = @block.sprite
       pos = sp.getPosition
       sp.setPosition(
-        pos.x + (x - @touchBeginPoint[:x]),
-        pos.y + (y - @touchBeginPoint[:y])
+        pos.x + (point.x - @touchBeginPoint[:x]),
+        pos.y + (point.y - @touchBeginPoint[:y])
       )
-      @touchBeginPoint = {:x=>x, :y=>y}
+      @touchBeginPoint = {:x=>point.x, :y=>point.y}
     end
   end
 
-  def onTouchEnded(x, y)
-    puts("onTouchEnded: #{x},#{y}")
+  def onTouchEnded(touch)
+    point = @bg.convertTouchToNodeSpace(touch)
+    puts("onTouchEnded: #{point.x},#{point.y}")
     @touchBeginPoint = nil
 
     (0...BLOCK_MAX_X).each do |_x|
       (0...BLOCK_MAX_Y).each do |_y|
         sp = @bg.getChildByTag(blockTag(_x,_y))
-        if sp && sp.boundingBox.containsPoint(ccp(x,y))
+        if sp && sp.boundingBox.containsPoint(ccp(point.x,point.y))
           p "x=#{_x} x=#{_y}"
         end
       end
     end
   end
 
-  def onTouchCanceled(x, y)
-    onTouchEnded(x, y)
+  def onTouchCanceled(touch)
+    onTouchEnded(touch)
   end
 end
 
