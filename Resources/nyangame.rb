@@ -1,15 +1,57 @@
 include Cocos2d
 include CocosDenshion
 
-class Block
+class Node
+  @@wrap_objects = {}
+  attr_reader :cc_object
+  def initialize(*args)
+    @cc_class_name ||= 'CC' + self.class.to_s
+    @cc_class = Cocos2d.const_get(@cc_class_name)
+    @cc_object = @cc_class.create(*args)
+    @@wrap_objects[@cc_object.dataptr] = self
+    nil
+  end
+  # TODO remove deleted object from @@wrap_objects
+
+  def method_missing(method, *args, &block)
+    args = args.map do |arg|
+      if arg.kind_of?(Node)
+        arg.cc_object
+      else
+        arg
+      end
+    end
+
+    ret = @cc_object.send(method, *args, &block)
+
+    if ret.kind_of?(Cocos2d::CCNode)
+      if @@wrap_objects[ret.dataptr]
+        ret = @@wrap_objects[ret.dataptr]
+      end
+    end
+    return ret
+  end
+end
+
+class Sprite < Node
+end
+
+class Layer < Node
+end
+
+class Scene < Node
+end
+
+
+
+class Block < Sprite
+  attr_reader :color
   def initialize(color)
+    @cc_class_name = 'CCSprite'
+    super(color.to_s + ".png")
+
     @color = color
-    @next_pos = nil
   end
-  def sprite
-    @sprite ||= CCSprite.create(@color.to_s + ".png")
-  end
-  attr_accessor :next_pos
 end
 
 class NyanGame
@@ -39,7 +81,7 @@ class NyanGame
 
   def scene
     unless @scene
-      @layer = CCLayer.create
+      @layer = Layer.new
 
       @touchBeginPoint = nil
       @layer.registerScriptTouchHandler do |eventType, touch|
@@ -59,20 +101,19 @@ class NyanGame
       @layer.setTouchMode(KCCTouchesOneByOne)
       @layer.setTouchEnabled(true)
 
-      @bg = CCSprite.create("background.png")
+      @bg = Sprite.new("background.png")
       @bg.setPosition(@win_size.width/2, @win_size.height/2)
       @layer.addChild(@bg, zorder[:bg], tag[:bg])
 
-      @scene = CCScene.create
+      @scene = Scene.new
       @scene.addChild(@layer)
 
       @block = Block.new(:red)
-      @block_size = @block.sprite.getContentSize.height
+      @block_size = @block.getContentSize.height
 
       if "demo"
-        sp = @block.sprite
-        sp.setPosition(@win_size.width/2, @win_size.height/2)
-        @bg.addChild(sp, zorder[:block], tag[:block])
+        @block.setPosition(@win_size.width/2, @win_size.height/2)
+        @bg.addChild(@block, zorder[:block], tag[:block])
       end
 
       _createBlocks
@@ -98,10 +139,9 @@ class NyanGame
       (0...BLOCK_MAX_Y).each do |y|
         color = COLORS[rand(COLORS.size)]
         block = Block.new(color)
-        sp = block.sprite
-        sp.setPosition(blockCCPoint(x,y))
+        block.setPosition(blockCCPoint(x,y))
         @blocks_by_color[color] << block
-        @bg.addChild(sp, zorder[:block], blockTag(x,y))
+        @bg.addChild(block, zorder[:block], blockTag(x,y))
       end
     end
   end
@@ -120,9 +160,8 @@ class NyanGame
     point = @bg.convertTouchToNodeSpace(touch)
     puts("onTouchMoved: #{point.x},#{point.y}")
     if @touchBeginPoint
-      sp = @block.sprite
-      pos = sp.getPosition
-      sp.setPosition(
+      pos = @block.getPosition
+      @block.setPosition(
         pos.x + (point.x - @touchBeginPoint[:x]),
         pos.y + (point.y - @touchBeginPoint[:y])
       )
@@ -131,29 +170,47 @@ class NyanGame
   end
 
   def onTouchEnded(touch)
-    point = @bg.convertTouchToNodeSpace(touch)
-    puts("onTouchEnded: #{point.x},#{point.y}")
     @touchBeginPoint = nil
 
-    (0...BLOCK_MAX_X).each do |_x|
-      (0...BLOCK_MAX_Y).each do |_y|
-        sp = @bg.getChildByTag(blockTag(_x,_y))
-        if sp && sp.boundingBox.containsPoint(ccp(point.x,point.y))
-          p "x=#{_x} x=#{_y}"
-        end
-      end
+    point = @bg.convertTouchToNodeSpace(touch)
+    puts("onTouchEnded: #{point.x},#{point.y}")
+
+    block = findTouchedBlock(touch)
+    if block
+      puts("block #{block} #{block.color} #{block.getTag}")
+    else
+      puts("block nil")
     end
   end
 
   def onTouchCanceled(touch)
     onTouchEnded(touch)
   end
+
+  def findTouchedBlock(touch)
+    point = @bg.convertTouchToNodeSpace(touch)
+
+    (0...BLOCK_MAX_X).each do |_x|
+      (0...BLOCK_MAX_Y).each do |_y|
+        tag = blockTag(_x,_y)
+        block = @bg.getChildByTag(tag)
+        if block && block.boundingBox.containsPoint(ccp(point.x,point.y))
+          p "findTouchedBlock x=#{_x} x=#{_y} tag=#{tag}"
+          return block
+        end
+      end
+    end
+
+    return nil
+  end
 end
 
-if true
+begin
   d = Cocos2d::CCDirector.sharedDirector
   d.setContentScaleFactor(768.0 / d.getWinSize.height)
 
   nyangame = NyanGame.new
-  d.runWithScene(nyangame.scene)
+  d.runWithScene(nyangame.scene.cc_object)
+rescue => e
+  puts "ERROR #{e.inspect} #{e.backtrace.first}"
 end
