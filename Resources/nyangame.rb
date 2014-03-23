@@ -29,6 +29,7 @@ class Node
         ret = @@wrap_objects[ret.dataptr]
       end
     end
+
     return ret
   end
 end
@@ -52,6 +53,9 @@ class Block < Sprite
 
     @color = color
   end
+  def to_s
+    super + " #{color} #{getTag}"
+  end
 end
 
 class NyanGame
@@ -59,6 +63,7 @@ class NyanGame
   COLORS = [:red, :blue, :yellow, :green, :gray]
   BLOCK_MAX_X = 8
   BLOCK_MAX_Y = 8
+  MP3_REMOVE_BLOCK = "removeBlock.mp3"
 
   def initialize
     @win_size = CCDirector.sharedDirector.getWinSize
@@ -71,9 +76,6 @@ class NyanGame
       :block      =>    2,
       :block_base => 1000,
     }
-
-    @blocks_by_color = {}
-    COLORS.each{|c| @blocks_by_color[c] = [] }
 
     @animating = false
     @score     = 0
@@ -117,6 +119,8 @@ class NyanGame
       end
 
       _createBlocks
+
+      SimpleAudioEngine.sharedEngine.preloadEffect(MP3_REMOVE_BLOCK)
     end
     @scene
   end
@@ -140,7 +144,6 @@ class NyanGame
         color = COLORS[rand(COLORS.size)]
         block = Block.new(color)
         block.setPosition(blockCCPoint(x,y))
-        @blocks_by_color[color] << block
         @bg.addChild(block, zorder[:block], blockTag(x,y))
       end
     end
@@ -176,10 +179,15 @@ class NyanGame
     puts("onTouchEnded: #{point.x},#{point.y}")
 
     block = findTouchedBlock(touch)
-    if block
-      puts("block #{block} #{block.color} #{block.getTag}")
-    else
-      puts("block nil")
+    puts("touch=#{block}")
+
+    blocks = findSameColorNeighboringBlocks(block)
+    blocks.each do |b|
+      puts("remove=#{b}")
+      b.removeFromParentAndCleanup(true)
+    end
+    if 0<blocks.size
+      SimpleAudioEngine.sharedEngine.playEffect(MP3_REMOVE_BLOCK)
     end
   end
 
@@ -195,13 +203,24 @@ class NyanGame
         tag = blockTag(_x,_y)
         block = @bg.getChildByTag(tag)
         if block && block.boundingBox.containsPoint(ccp(point.x,point.y))
-          p "findTouchedBlock x=#{_x} x=#{_y} tag=#{tag}"
+          #p "findTouchedBlock x=#{_x} x=#{_y} tag=#{tag}"
           return block
         end
       end
     end
 
     return nil
+  end
+
+  def findSameColorNeighboringBlocks(block, blocks=[])
+    [-1, +1, -100, +100].each do |n|
+      b = @bg.getChildByTag(block.getTag()+n)
+      if b && b.color==block.color && !blocks.include?(b)
+        blocks << b
+        findSameColorNeighboringBlocks(b, blocks)
+      end
+    end
+    return blocks
   end
 end
 
