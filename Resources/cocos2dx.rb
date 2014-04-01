@@ -9,11 +9,11 @@ class Node
     @cc_object = @cc_class.create(*args)
     @@cc_object_id += 1
     @cc_object.m_nLuaID = @@cc_object_id
-    @@wrap_objects[@cc_object.dataptr] = self
+    @@wrap_objects[@cc_object.m_nLuaID] = self
   end
 
   def self._removeScriptObject(obj)
-    @@wrap_objects.delete(obj.dataptr)
+    @@wrap_objects.delete(obj.m_nLuaID)
   end
 
   def method_missing(method, *args, &block)
@@ -28,8 +28,8 @@ class Node
     ret = @cc_object.send(method, *args, &block)
 
     if ret.kind_of?(Cocos2d::CCNode)
-      if @@wrap_objects[ret.dataptr]
-        ret = @@wrap_objects[ret.dataptr]
+      if @@wrap_objects[ret.m_nLuaID]
+        ret = @@wrap_objects[ret.m_nLuaID]
       end
     end
 

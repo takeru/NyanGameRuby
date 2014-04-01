@@ -135,12 +135,20 @@ class NyanGame
     puts("touch=#{block}")
     if block
       blocks = findSameColorNeighboringBlocks(block)
-      blocks.each do |b|
-        puts("remove=#{b}")
-        b.removeFromParentAndCleanup(true)
-      end
-      if 0<blocks.size
-        CocosDenshion::SimpleAudioEngine.sharedEngine.playEffect(MP3_REMOVE_BLOCK)
+      blocks.each_with_index do |b, index|
+        scale_action = Cocos2d::CCScaleTo.create(1.0, 0)
+        remove_action = Cocos2d::CCCallFunc.create do
+          puts("remove=#{b}")
+          b.removeFromParentAndCleanup(true)
+        end
+        action = Cocos2d::CCSequence.createWithTwoActions(scale_action, remove_action)
+        if index == 0
+          sound_action = Cocos2d::CCCallFunc.create do
+            CocosDenshion::SimpleAudioEngine.sharedEngine.playEffect(MP3_REMOVE_BLOCK)
+          end
+          action = Cocos2d::CCSpawn.createWithTwoActions(action, sound_action)
+        end
+        b.runAction(action)
       end
     end
   end
