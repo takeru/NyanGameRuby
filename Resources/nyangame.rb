@@ -3,15 +3,21 @@ include CocosDenshion
 
 class Node
   @@wrap_objects = {}
+  @@cc_object_id = 0
   attr_reader :cc_object
+
   def initialize(*args)
     @cc_class_name ||= 'CC' + self.class.to_s
     @cc_class = Cocos2d.const_get(@cc_class_name)
     @cc_object = @cc_class.create(*args)
+    @@cc_object_id += 1
+    @cc_object.m_nLuaID = @@cc_object_id
     @@wrap_objects[@cc_object.dataptr] = self
-    nil
   end
-  # TODO remove deleted object from @@wrap_objects
+
+  def self._removeScriptObject(obj)
+    @@wrap_objects.delete(obj.dataptr)
+  end
 
   def method_missing(method, *args, &block)
     args = args.map do |arg|
@@ -32,6 +38,10 @@ class Node
 
     return ret
   end
+end
+
+Cocos2d::Callback.removeScriptObject = proc do |obj|
+  Node._removeScriptObject(obj)
 end
 
 class Sprite < Node
@@ -180,14 +190,15 @@ class NyanGame
 
     block = findTouchedBlock(touch)
     puts("touch=#{block}")
-
-    blocks = findSameColorNeighboringBlocks(block)
-    blocks.each do |b|
-      puts("remove=#{b}")
-      b.removeFromParentAndCleanup(true)
-    end
-    if 0<blocks.size
-      SimpleAudioEngine.sharedEngine.playEffect(MP3_REMOVE_BLOCK)
+    if block
+      blocks = findSameColorNeighboringBlocks(block)
+      blocks.each do |b|
+        puts("remove=#{b}")
+        b.removeFromParentAndCleanup(true)
+      end
+      if 0<blocks.size
+        SimpleAudioEngine.sharedEngine.playEffect(MP3_REMOVE_BLOCK)
+      end
     end
   end
 
