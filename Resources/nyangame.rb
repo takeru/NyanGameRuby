@@ -1,60 +1,3 @@
-include Cocos2d
-include CocosDenshion
-
-class Node
-  @@wrap_objects = {}
-  @@cc_object_id = 0
-  attr_reader :cc_object
-
-  def initialize(*args)
-    @cc_class_name ||= 'CC' + self.class.to_s
-    @cc_class = Cocos2d.const_get(@cc_class_name)
-    @cc_object = @cc_class.create(*args)
-    @@cc_object_id += 1
-    @cc_object.m_nLuaID = @@cc_object_id
-    @@wrap_objects[@cc_object.dataptr] = self
-  end
-
-  def self._removeScriptObject(obj)
-    @@wrap_objects.delete(obj.dataptr)
-  end
-
-  def method_missing(method, *args, &block)
-    args = args.map do |arg|
-      if arg.kind_of?(Node)
-        arg.cc_object
-      else
-        arg
-      end
-    end
-
-    ret = @cc_object.send(method, *args, &block)
-
-    if ret.kind_of?(Cocos2d::CCNode)
-      if @@wrap_objects[ret.dataptr]
-        ret = @@wrap_objects[ret.dataptr]
-      end
-    end
-
-    return ret
-  end
-end
-
-Cocos2d::Callback.removeScriptObject = proc do |obj|
-  Node._removeScriptObject(obj)
-end
-
-class Sprite < Node
-end
-
-class Layer < Node
-end
-
-class Scene < Node
-end
-
-
-
 class Block < Sprite
   attr_reader :color
   def initialize(color)
@@ -76,7 +19,7 @@ class NyanGame
   MP3_REMOVE_BLOCK = "removeBlock.mp3"
 
   def initialize
-    @win_size = CCDirector.sharedDirector.getWinSize
+    @win_size = Cocos2d::CCDirector.sharedDirector.getWinSize
     @zorder = {
       :bg    =>    0,
       :block =>  100,
@@ -98,19 +41,19 @@ class NyanGame
       @touchBeginPoint = nil
       @layer.registerScriptTouchHandler do |eventType, touch|
         case eventType
-        when CCTOUCHBEGAN
+        when Cocos2d::CCTOUCHBEGAN
           onTouchBegan(touch)
-        when CCTOUCHMOVED
+        when Cocos2d::CCTOUCHMOVED
           onTouchMoved(touch)
-        when CCTOUCHENDED
+        when Cocos2d::CCTOUCHENDED
           onTouchEnded(touch)
-        when CCTOUCHCANCELLED
+        when Cocos2d::CCTOUCHCANCELLED
           onTouchCanceled(touch)
         else
           raise "unknown eventType=#{eventType}"
         end
       end
-      @layer.setTouchMode(KCCTouchesOneByOne)
+      @layer.setTouchMode(Cocos2d::KCCTouchesOneByOne)
       @layer.setTouchEnabled(true)
 
       @bg = Sprite.new("background.png")
@@ -130,7 +73,7 @@ class NyanGame
 
       _createBlocks
 
-      SimpleAudioEngine.sharedEngine.preloadEffect(MP3_REMOVE_BLOCK)
+      CocosDenshion::SimpleAudioEngine.sharedEngine.preloadEffect(MP3_REMOVE_BLOCK)
     end
     @scene
   end
@@ -138,7 +81,7 @@ class NyanGame
   def blockCCPoint(x, y)
     offsetX = @bg.getContentSize.width  * 0.168
     offsetY = @bg.getContentSize.height * 0.029
-    return ccp(
+    return Cocos2d::ccp(
       (x+0.5) * @block_size + offsetX,
       (y+0.5) * @block_size + offsetY
     )
@@ -160,7 +103,7 @@ class NyanGame
   end
 
   def onTouchBegan(touch)
-    glPt = CCDirector.sharedDirector.convertToGL(touch.getLocationInView)
+    glPt = Cocos2d::CCDirector.sharedDirector.convertToGL(touch.getLocationInView)
 
     point = @bg.convertTouchToNodeSpace(touch)
     puts("onTouchBegan: #{point.x},#{point.y} GL=(#{glPt.x},#{glPt.y})")
@@ -197,7 +140,7 @@ class NyanGame
         b.removeFromParentAndCleanup(true)
       end
       if 0<blocks.size
-        SimpleAudioEngine.sharedEngine.playEffect(MP3_REMOVE_BLOCK)
+        CocosDenshion::SimpleAudioEngine.sharedEngine.playEffect(MP3_REMOVE_BLOCK)
       end
     end
   end
@@ -213,7 +156,7 @@ class NyanGame
       (0...BLOCK_MAX_Y).each do |_y|
         tag = blockTag(_x,_y)
         block = @bg.getChildByTag(tag)
-        if block && block.boundingBox.containsPoint(ccp(point.x,point.y))
+        if block && block.boundingBox.containsPoint(Cocos2d::ccp(point.x,point.y))
           #p "findTouchedBlock x=#{_x} x=#{_y} tag=#{tag}"
           return block
         end

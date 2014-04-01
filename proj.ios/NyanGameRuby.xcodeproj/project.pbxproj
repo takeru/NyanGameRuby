@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0028048318EB11EC00BBAD22 /* cocos2dx.rb in Resources */ = {isa = PBXBuildFile; fileRef = 0028048218EB11EC00BBAD22 /* cocos2dx.rb */; };
 		00D4CC2C18DDE8920092A3C9 /* ButtonReader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00D4CC0318DDE8920092A3C9 /* ButtonReader.cpp */; };
 		00D4CC2D18DDE8920092A3C9 /* CheckBoxReader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00D4CC0618DDE8920092A3C9 /* CheckBoxReader.cpp */; };
 		00D4CC2E18DDE8920092A3C9 /* ImageViewReader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00D4CC0918DDE8920092A3C9 /* ImageViewReader.cpp */; };
@@ -302,6 +303,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0028048218EB11EC00BBAD22 /* cocos2dx.rb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.ruby; path = cocos2dx.rb; sourceTree = "<group>"; };
 		00D4CC0318DDE8920092A3C9 /* ButtonReader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ButtonReader.cpp; sourceTree = "<group>"; };
 		00D4CC0418DDE8920092A3C9 /* ButtonReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ButtonReader.h; sourceTree = "<group>"; };
 		00D4CC0618DDE8920092A3C9 /* CheckBoxReader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CheckBoxReader.cpp; sourceTree = "<group>"; };
@@ -1978,6 +1980,7 @@
 		78C7DDAA14EBA5050085D0C2 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				0028048218EB11EC00BBAD22 /* cocos2dx.rb */,
 				00F1F44D18ABBE9A008A6515 /* background.png */,
 				00F1F44E18ABBE9A008A6515 /* blue.png */,
 				00F1F44F18ABBE9A008A6515 /* blueFont.fnt */,
@@ -2087,6 +2090,7 @@
 			files = (
 				00F1F46B18ABBE9A008A6515 /* green.png in Resources */,
 				7855E0E1153FEF240059DD9A /* Default.png in Resources */,
+				0028048318EB11EC00BBAD22 /* cocos2dx.rb in Resources */,
 				00F1F46A18ABBE9A008A6515 /* grayFont.png in Resources */,
 				00F1F44C18ABBE84008A6515 /* nyangame.rb in Resources */,
 				00F1F46818ABBE9A008A6515 /* gray.png in Resources */,

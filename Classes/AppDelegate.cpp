@@ -37,8 +37,10 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
     CCMrubyEngine* pEngine = CCMrubyEngine::defaultEngine();
     CCScriptEngineManager::sharedManager()->setScriptEngine(pEngine);
-    std::string path = CCFileUtils::sharedFileUtils()->fullPathForFilename("nyangame.rb");
-    pEngine->executeScriptFile(path.c_str());
+    std::string path1 = CCFileUtils::sharedFileUtils()->fullPathForFilename("cocos2dx.rb");
+    pEngine->executeScriptFile(path1.c_str());
+    std::string path2 = CCFileUtils::sharedFileUtils()->fullPathForFilename("nyangame.rb");
+    pEngine->executeScriptFile(path2.c_str());
 
     return true;
 }
