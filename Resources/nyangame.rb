@@ -1,13 +1,16 @@
 class Block < Sprite
   attr_reader :color
+  attr_accessor :next_x, :next_y
   def initialize(color)
     @cc_class_name = 'CCSprite'
     super(color.to_s + ".png")
 
     @color = color
+    @next_x = -1
+    @next_y = -1
   end
   def to_s
-    super + " #{color} #{getTag}"
+    super + " #{color} #{getTag} #{next_x} #{next_y}"
   end
 end
 
@@ -91,6 +94,11 @@ class NyanGame
     tag[:block_base] + x * 100 + y
   end
 
+  def blockTagToXY(blockTag)
+    t = blockTag - tag[:block_base]
+    return [(t/100).floor, t%100]
+  end
+
   def _createBlocks
     (0...BLOCK_MAX_X).each do |x|
       (0...BLOCK_MAX_Y).each do |y|
@@ -135,21 +143,8 @@ class NyanGame
     puts("touch=#{block}")
     if block
       blocks = findSameColorNeighboringBlocks(block)
-      blocks.each_with_index do |b, index|
-        scale_action = Cocos2d::CCScaleTo.create(1.0, 0)
-        remove_action = Cocos2d::CCCallFunc.create do
-          puts("remove=#{b}")
-          b.removeFromParentAndCleanup(true)
-        end
-        action = Cocos2d::CCSequence.createWithTwoActions(scale_action, remove_action)
-        if index == 0
-          sound_action = Cocos2d::CCCallFunc.create do
-            CocosDenshion::SimpleAudioEngine.sharedEngine.playEffect(MP3_REMOVE_BLOCK)
-          end
-          action = Cocos2d::CCSpawn.createWithTwoActions(action, sound_action)
-        end
-        b.runAction(action)
-      end
+      deleteBlocks(blocks)
+      moveBlocks(blocks)
     end
   end
 
@@ -183,6 +178,52 @@ class NyanGame
       end
     end
     return blocks
+  end
+
+  def deleteBlocks(blocks)
+    blocks.each_with_index do |b, index|
+      scale_action = Cocos2d::CCScaleTo.create(0.1, 0)
+      remove_action = Cocos2d::CCCallFunc.create do
+        b.removeFromParentAndCleanup(true)
+      end
+      action = Cocos2d::CCSequence.createWithTwoActions(scale_action, remove_action)
+      if index == 0
+        sound_action = Cocos2d::CCCallFunc.create do
+          CocosDenshion::SimpleAudioEngine.sharedEngine.playEffect(MP3_REMOVE_BLOCK)
+        end
+        action = Cocos2d::CCSpawn.createWithTwoActions(action, sound_action)
+      end
+      b.runAction(action)
+    end
+  end
+
+  def moveBlocks(blocks)
+    blocks.each_with_index do |b, index|
+      x,y = blockTagToXY(b.getTag())
+      ((y+1)..(BLOCK_MAX_Y-1)).each do |y0|
+        b0 = @bg.getChildByTag(blockTag(x,y0))
+        if b0
+          if b0.next_y == -1
+            b0.next_y = y0
+            b0.next_x = x
+          end
+          b0.next_y -= 1
+        end
+      end
+    end
+
+    (0...BLOCK_MAX_X).each do |_x|
+      (0...BLOCK_MAX_Y).each do |_y|
+        b = @bg.getChildByTag(blockTag(_x,_y))
+        if b && 0<=b.next_x && 0<=b.next_y
+          move_action = Cocos2d::CCMoveTo.create(0.2, blockCCPoint(b.next_x, b.next_y))
+          b.runAction(move_action)
+          b.setTag(blockTag(b.next_x, b.next_y))
+          b.next_x = -1
+          b.next_y = -1
+        end
+      end
+    end
   end
 end
 
