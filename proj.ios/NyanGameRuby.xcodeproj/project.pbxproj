@@ -2383,7 +2383,7 @@
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"/Users/takeru/proj/cocos2d-x-2.2.3/projects/NyanGameRuby/ios-ruby-embedded",
+					"\"$(SRCROOT)/../../../projects/NyanGameRuby/ios-ruby-embedded\"",
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
@@ -2438,7 +2438,7 @@
 				COPY_PHASE_STRIP = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"/Users/takeru/proj/cocos2d-x-2.2.3/projects/NyanGameRuby/ios-ruby-embedded",
+					"\"$(SRCROOT)/../../../projects/NyanGameRuby/ios-ruby-embedded\"",
 				);
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
