@@ -20,6 +20,8 @@ class NyanGame
   BLOCK_MAX_X = 8
   BLOCK_MAX_Y = 8
   MP3_REMOVE_BLOCK = "removeBlock.mp3"
+  REMOVEING_TIME = 0.1
+  MOVING_TIME_1  = 0.2
 
   def initialize
     @win_size = Cocos2d::CCDirector.sharedDirector.getWinSize
@@ -143,8 +145,11 @@ class NyanGame
     puts("touch=#{block}")
     if block
       blocks = findSameColorNeighboringBlocks(block)
-      deleteBlocks(blocks)
-      moveBlocks(blocks)
+      if 0<blocks.size
+        @animating = true
+        delete_blocks(blocks)
+        move_blocks1(blocks)
+      end
     end
   end
 
@@ -180,9 +185,9 @@ class NyanGame
     return blocks
   end
 
-  def deleteBlocks(blocks)
+  def delete_blocks(blocks)
     blocks.each_with_index do |b, index|
-      scale_action = Cocos2d::CCScaleTo.create(0.1, 0)
+      scale_action = Cocos2d::CCScaleTo.create(REMOVEING_TIME, 0)
       remove_action = Cocos2d::CCCallFunc.create do
         b.removeFromParentAndCleanup(true)
       end
@@ -197,7 +202,7 @@ class NyanGame
     end
   end
 
-  def moveBlocks(blocks)
+  def move_blocks1(blocks)
     blocks.each_with_index do |b, index|
       x,y = blockTagToXY(b.getTag())
       ((y+1)..(BLOCK_MAX_Y-1)).each do |y0|
@@ -211,12 +216,23 @@ class NyanGame
         end
       end
     end
+    run_move_actions
 
+    schedule_once(MOVING_TIME_1) do |a,b|
+      move_blocks2
+    end
+  end
+
+  def move_blocks2
+    puts "move_blocks2"
+  end
+
+  def run_move_actions
     (0...BLOCK_MAX_X).each do |_x|
       (0...BLOCK_MAX_Y).each do |_y|
         b = @bg.getChildByTag(blockTag(_x,_y))
         if b && 0<=b.next_x && 0<=b.next_y
-          move_action = Cocos2d::CCMoveTo.create(0.2, blockCCPoint(b.next_x, b.next_y))
+          move_action = Cocos2d::CCMoveTo.create(MOVING_TIME_1, blockCCPoint(b.next_x, b.next_y))
           b.runAction(move_action)
           b.setTag(blockTag(b.next_x, b.next_y))
           b.next_x = -1
@@ -224,6 +240,17 @@ class NyanGame
         end
       end
     end
+  end
+
+  def schedule_once(delay, *args, &block)
+    scheduler = Cocos2d::CCDirector.sharedDirector.getScheduler
+
+    entry_id = scheduler.scheduleScriptFunc(delay, false) do
+      scheduler.unscheduleScriptEntry(entry_id)
+      block.call(*args)
+    end
+
+    nil # dummy statement for https://github.com/mruby/mruby/issues/1992
   end
 end
 
