@@ -22,6 +22,7 @@ class NyanGame
   MP3_REMOVE_BLOCK = "removeBlock.mp3"
   REMOVEING_TIME = 0.1
   MOVING_TIME_1  = 0.2
+  MOVING_TIME_2  = 0.2
 
   def initialize
     @win_size = Cocos2d::CCDirector.sharedDirector.getWinSize
@@ -216,7 +217,7 @@ class NyanGame
         end
       end
     end
-    run_move_actions
+    run_move_actions(MOVING_TIME_1)
 
     schedule_once(MOVING_TIME_1) do |a,b|
       move_blocks2
@@ -243,15 +244,19 @@ class NyanGame
         end
       end
     end
-    run_move_actions
+    run_move_actions(MOVING_TIME_2)
+
+    schedule_once(MOVING_TIME_2) do |a,b|
+      @animating = false
+    end
   end
 
-  def run_move_actions
+  def run_move_actions(moving_time)
     (0...BLOCK_MAX_X).each do |_x|
       (0...BLOCK_MAX_Y).each do |_y|
         b = @bg.getChildByTag(blockTag(_x,_y))
         if b && 0<=b.next_x && 0<=b.next_y
-          move_action = Cocos2d::CCMoveTo.create(MOVING_TIME_1, blockCCPoint(b.next_x, b.next_y))
+          move_action = Cocos2d::CCMoveTo.create(moving_time, blockCCPoint(b.next_x, b.next_y))
           b.runAction(move_action)
           b.setTag(blockTag(b.next_x, b.next_y))
           b.next_x = -1
@@ -268,8 +273,6 @@ class NyanGame
       scheduler.unscheduleScriptEntry(entry_id)
       block.call(*args)
     end
-
-    nil # dummy statement for https://github.com/mruby/mruby/issues/1992
   end
 end
 
