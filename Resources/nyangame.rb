@@ -206,13 +206,13 @@ class NyanGame
     blocks.each_with_index do |b, index|
       x,y = blockTagToXY(b.getTag())
       ((y+1)..(BLOCK_MAX_Y-1)).each do |y0|
-        b0 = @bg.getChildByTag(blockTag(x,y0))
-        if b0
-          if b0.next_y == -1
-            b0.next_y = y0
-            b0.next_x = x
+        block = @bg.getChildByTag(blockTag(x,y0))
+        if block
+          if block.next_y == -1
+            block.next_y = y0
+            block.next_x = x
           end
-          b0.next_y -= 1
+          block.next_y -= 1
         end
       end
     end
@@ -224,7 +224,26 @@ class NyanGame
   end
 
   def move_blocks2
-    puts "move_blocks2"
+    (0..BLOCK_MAX_X).each do |x|
+      if @bg.getChildByTag(blockTag(x,0))
+        next
+      else
+        (x...BLOCK_MAX_X).each do |_x|
+          (0...BLOCK_MAX_Y).each do |_y|
+            tag = blockTag(_x,_y)
+            block = @bg.getChildByTag(tag)
+            if block
+              if block.next_x == -1
+                block.next_y = _y
+                block.next_x = _x
+              end
+              block.next_x -= 1
+            end
+          end
+        end
+      end
+    end
+    run_move_actions
   end
 
   def run_move_actions
