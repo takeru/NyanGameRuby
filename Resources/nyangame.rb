@@ -142,7 +142,12 @@ class NyanGame
     # score
     label = LabelBMFont.new("", "whiteFont.fnt")
     label.setPosition(Cocos2d::ccp(bg_size.width * 0.78, bg_size.height * 0.75))
-    @bg.addChild(label, zorder[:label], tag[:"label_score"])
+    @bg.addChild(label, zorder[:label], tag[:label_score])
+
+    # highscore
+    label = LabelBMFont.new("", "whiteFont.fnt")
+    label.setPosition(Cocos2d::ccp(bg_size.width * 0.78, bg_size.height * 0.87))
+    @bg.addChild(label, zorder[:label], tag[:label_highscore])
   end
 
   def _update_labels
@@ -171,6 +176,11 @@ class NyanGame
     # score
     label = @bg.getChildByTag(tag[:label_score])
     label.setString(@score.to_s)
+
+    # highscore
+    highscore = Cocos2d::CCUserDefault.sharedUserDefault.getIntegerForKey("highscore", 0)
+    label = @bg.getChildByTag(tag[:label_highscore])
+    label.setString(highscore.to_s)
   end
 
   def onTouchBegan(touch)
@@ -309,8 +319,12 @@ class NyanGame
 
     schedule_once(MOVING_TIME_2) do |a,b|
       @animating = false
-      _update_labels
       if gameover?
+        highscore = Cocos2d::CCUserDefault.sharedUserDefault.getIntegerForKey("highscore", 0)
+        if highscore < @score
+          Cocos2d::CCUserDefault.sharedUserDefault.setIntegerForKey("highscore", @score)
+        end
+
         bg_size = @bg.getContentSize
 
         @gameover = Sprite.new("gameover.png")
@@ -319,6 +333,8 @@ class NyanGame
 
         @layer.setTouchEnabled(false)
       end
+
+      _update_labels
     end
   end
 
