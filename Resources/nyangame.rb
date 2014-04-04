@@ -29,11 +29,18 @@ class NyanGame
     @zorder = {
       :bg    =>    0,
       :block =>  100,
+      :label =>  200
     }
     @tag    = {
-      :bg         =>    1,
-      :block      =>    2,
-      :block_base => 1000,
+      :bg           =>    1,
+      :block        =>    2,
+      :label_red    =>  101,
+      :label_blue   =>  102,
+      :label_yellow =>  103,
+      :label_green  =>  104,
+      :label_gray   =>  105,
+      :label_score  =>  106,
+      :block_base   => 1000,
     }
 
     @animating = false
@@ -77,7 +84,9 @@ class NyanGame
         @bg.addChild(@block, zorder[:block], tag[:block])
       end
 
-      _createBlocks
+      _create_blocks
+      _create_labels
+      _update_labels
 
       CocosDenshion::SimpleAudioEngine.sharedEngine.preloadEffect(MP3_REMOVE_BLOCK)
     end
@@ -102,7 +111,7 @@ class NyanGame
     return [(t/100).floor, t%100]
   end
 
-  def _createBlocks
+  def _create_blocks
     (0...BLOCK_MAX_X).each do |x|
       (0...BLOCK_MAX_Y).each do |y|
         color = COLORS[rand(COLORS.size)]
@@ -111,6 +120,55 @@ class NyanGame
         @bg.addChild(block, zorder[:block], blockTag(x,y))
       end
     end
+  end
+
+  def _create_labels
+    bg_size = @bg.getContentSize
+    height_rates = {
+      :red    => 0.61,
+      :blue   => 0.51,
+      :yellow => 0.41,
+      :green  => 0.31,
+      :gray   => 0.21
+    }
+    COLORS.each do |color|
+      label = LabelBMFont.new("", "#{color}Font.fnt")
+      label.setPosition(Cocos2d::ccp(bg_size.width * 0.78, bg_size.height * height_rates[color]))
+      @bg.addChild(label, zorder[:label], tag[:"label_#{color}"])
+    end
+
+    # score
+    label = LabelBMFont.new("", "whiteFont.fnt")
+    label.setPosition(Cocos2d::ccp(bg_size.width * 0.78, bg_size.height * 0.75))
+    @bg.addChild(label, zorder[:label], tag[:"label_score"])
+  end
+
+  def _update_labels
+    block_counts = {
+      :red    => 0,
+      :blue   => 0,
+      :yellow => 0,
+      :green  => 0,
+      :gray   => 0
+    }
+    (0...BLOCK_MAX_X).each do |_x|
+      (0...BLOCK_MAX_Y).each do |_y|
+        tag = blockTag(_x,_y)
+        block = @bg.getChildByTag(tag)
+        if block
+          block_counts[block.color] += 1
+        end
+      end
+    end
+
+    COLORS.each do |color|
+      label = @bg.getChildByTag(tag[:"label_#{color}"])
+      label.setString(block_counts[color].to_s)
+    end
+
+    # score
+    label = @bg.getChildByTag(tag[:label_score])
+    label.setString(@score.to_s)
   end
 
   def onTouchBegan(touch)
@@ -147,6 +205,7 @@ class NyanGame
     if block
       blocks = findSameColorNeighboringBlocks(block)
       if 0<blocks.size
+        @score += (blocks.size-2) ** 2
         @animating = true
         delete_blocks(blocks)
         move_blocks1(blocks)
@@ -248,6 +307,7 @@ class NyanGame
 
     schedule_once(MOVING_TIME_2) do |a,b|
       @animating = false
+      _update_labels
     end
   end
 

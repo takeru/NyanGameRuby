@@ -51,3 +51,8 @@ end
 class Scene < Node
 end
 
+class SpriteBatchNode < Node
+end
+
+class LabelBMFont < SpriteBatchNode
+end
