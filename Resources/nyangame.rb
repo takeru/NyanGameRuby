@@ -27,9 +27,10 @@ class NyanGame
   def initialize
     @win_size = Cocos2d::CCDirector.sharedDirector.getWinSize
     @zorder = {
-      :bg    =>    0,
-      :block =>  100,
-      :label =>  200
+      :bg       =>   0,
+      :block    => 100,
+      :label    => 200,
+      :gameover => 300
     }
     @tag    = {
       :bg           =>    1,
@@ -40,6 +41,7 @@ class NyanGame
       :label_green  =>  104,
       :label_gray   =>  105,
       :label_score  =>  106,
+      :gameover     =>  201,
       :block_base   => 1000,
     }
 
@@ -308,6 +310,15 @@ class NyanGame
     schedule_once(MOVING_TIME_2) do |a,b|
       @animating = false
       _update_labels
+      if gameover?
+        bg_size = @bg.getContentSize
+
+        @gameover = Sprite.new("gameover.png")
+        @gameover.setPosition(Cocos2d::ccp(bg_size.width * 0.5, bg_size.height * 0.8))
+        @bg.addChild(@gameover, zorder[:gameover], tag[:gameover])
+
+        @layer.setTouchEnabled(false)
+      end
     end
   end
 
@@ -324,6 +335,21 @@ class NyanGame
         end
       end
     end
+  end
+
+  def gameover?
+    (0...BLOCK_MAX_X).each do |_x|
+      (0...BLOCK_MAX_Y).each do |_y|
+        block = @bg.getChildByTag(blockTag(_x,_y))
+        if block
+          blocks = findSameColorNeighboringBlocks(block)
+          if 0 < blocks.size
+            return false
+          end
+        end
+      end
+    end
+    return true
   end
 
   def schedule_once(delay, *args, &block)
