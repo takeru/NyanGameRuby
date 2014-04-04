@@ -89,6 +89,7 @@ class NyanGame
       _create_blocks
       _create_labels
       _update_labels
+      _create_menus
 
       CocosDenshion::SimpleAudioEngine.sharedEngine.preloadEffect(MP3_REMOVE_BLOCK)
     end
@@ -168,6 +169,21 @@ class NyanGame
       end
     end
 
+    def _create_menus
+      bg_size = @bg.getContentSize
+
+      reset_button = MenuItemImage.new("reset1.png", "reset1.png")
+      reset_button.setPosition(Cocos2d::ccp(bg_size.width * 0.78, bg_size.height * 0.1))
+      reset_button.registerScriptTapHandler do
+        _reset
+      end
+
+      menu = Menu.createWithItem(reset_button)
+      menu.setPosition(0,0)
+
+      @bg.addChild(menu)
+    end
+
     COLORS.each do |color|
       label = @bg.getChildByTag(tag[:"label_#{color}"])
       label.setString(block_counts[color].to_s)
@@ -181,6 +197,12 @@ class NyanGame
     highscore = Cocos2d::CCUserDefault.sharedUserDefault.getIntegerForKey("highscore", 0)
     label = @bg.getChildByTag(tag[:label_highscore])
     label.setString(highscore.to_s)
+  end
+
+  def _reset
+    d = Cocos2d::CCDirector.sharedDirector
+    nyangame = NyanGame.new
+    d.replaceScene(nyangame.scene.cc_object)
   end
 
   def onTouchBegan(touch)

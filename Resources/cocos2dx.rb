@@ -5,25 +5,43 @@ class Node
 
   def initialize(*args)
     @cc_class_name ||= 'CC' + self.class.to_s
+    unless @cc_constructor_name
+      @cc_constructor_name = 'create'
+      if 1<=args.size && args[0].kind_of?(Symbol)
+        suffix = args.shift
+        @cc_constructor_name += suffix.to_s
+      end
+    end
     @cc_class = Cocos2d.const_get(@cc_class_name)
-    @cc_object = @cc_class.create(*args)
+    args = _wrap_object_to_cc_object(args)
+    @cc_object = @cc_class.send(@cc_constructor_name, *args)
+    _add_to_wrap_objects
+  end
+
+  def _add_to_wrap_objects
     @@cc_object_id += 1
     @cc_object.m_nLuaID = @@cc_object_id
     @@wrap_objects[@cc_object.m_nLuaID] = self
   end
 
-  def self._removeScriptObject(obj)
+  def self._remove_from_wrap_objects(obj)
     @@wrap_objects.delete(obj.m_nLuaID)
   end
 
-  def method_missing(method, *args, &block)
-    args = args.map do |arg|
+  def _wrap_object_to_cc_object(args)
+    args.map do |arg|
       if arg.kind_of?(Node)
         arg.cc_object
+      elsif arg.kind_of?(Array)
+        _wrap_object_to_cc_object(arg)
       else
         arg
       end
     end
+  end
+
+  def method_missing(method, *args, &block)
+    args = _wrap_object_to_cc_object(args)
 
     ret = @cc_object.send(method, *args, &block)
 
@@ -38,11 +56,13 @@ class Node
 end
 
 Cocos2d::Callback.removeScriptObject = proc do |obj|
- #puts "removeScriptObject m_nLuaID=#{obj.m_nLuaID} dataptr=#{obj.dataptr} retainCount=#{obj.retainCount}"
-  Node._removeScriptObject(obj)
+  Node._remove_from_wrap_objects(obj)
 end
 
-class Sprite < Node
+class NodeRGBA < Node
+end
+
+class Sprite < NodeRGBA
 end
 
 class Layer < Node
@@ -55,4 +75,22 @@ class SpriteBatchNode < Node
 end
 
 class LabelBMFont < SpriteBatchNode
+end
+
+class LayerRGBA < Layer
+end
+
+class Menu < LayerRGBA
+  def self.createWithItem(item)
+    new(:WithItem, item)
+  end
+end
+
+class MenuItem < NodeRGBA
+end
+
+class MenuItemSprite < MenuItem
+end
+
+class MenuItemImage < MenuItemSprite
 end
